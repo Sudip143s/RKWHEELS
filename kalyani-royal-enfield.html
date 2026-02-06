@@ -1,0 +1,1720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R K WHEELS Royal Enfield - Ride Pure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1a1a1a;
+            --secondary: #d4af37;
+            --accent: #8b0000;
+            --light: #f5f5f5;
+            --text: #2c2c2c;
+        }
+
+        body {
+            font-family: 'Crimson Text', serif;
+            background: var(--primary);
+            color: var(--light);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .navbar.scrolled {
+            background: rgba(26, 26, 26, 0.98);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Hero Slider */
+        .hero-slider {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 100%);
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .slide-content h1 {
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 1.5rem;
+            color: var(--light);
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+            animation: slideInLeft 1s ease-out;
+        }
+
+        .slide-content p {
+            font-size: clamp(1.2rem, 2vw, 1.8rem);
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+            font-style: italic;
+            color: var(--secondary);
+            animation: slideInLeft 1s ease-out 0.2s backwards;
+        }
+
+        .slider-nav {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            gap: 15px;
+        }
+
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            border: 2px solid var(--secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .slider-dot.active {
+            background: var(--secondary);
+            transform: scale(1.3);
+        }
+
+        /* Animations */
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .scale-in {
+            animation: scaleIn 0.6s ease-out;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            display: inline-block;
+            padding: 16px 40px;
+            background: var(--secondary);
+            color: var(--primary);
+            text-decoration: none;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.4s ease;
+            border: 2px solid var(--secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent);
+            transition: left 0.4s ease;
+            z-index: -1;
+        }
+
+        .btn-primary:hover::before {
+            left: 0;
+        }
+
+        .btn-primary:hover {
+            color: var(--light);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            padding: 16px 40px;
+            background: transparent;
+            color: var(--light);
+            text-decoration: none;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            border: 2px solid var(--light);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-secondary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--light);
+            transition: left 0.4s ease;
+            z-index: -1;
+        }
+
+        .btn-secondary:hover::before {
+            left: 0;
+        }
+
+        .btn-secondary:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        /* Bike Cards */
+        .bike-card {
+            position: relative;
+            overflow: hidden;
+            background: #2a2a2a;
+            transition: all 0.5s ease;
+            cursor: pointer;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .bike-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .bike-card:hover::before {
+            left: 100%;
+        }
+
+        .bike-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(212, 175, 55, 0.2);
+            border-color: var(--secondary);
+        }
+
+        .bike-card img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .bike-card:hover img {
+            transform: scale(1.1);
+        }
+
+        /* Parallax Section */
+        .parallax {
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .parallax::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+        }
+
+        /* Map Styles */
+        #map {
+            height: 500px;
+            border: 3px solid var(--secondary);
+            filter: grayscale(30%) contrast(1.1);
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: var(--primary);
+            color: var(--light);
+            border: 2px solid var(--secondary);
+        }
+
+        .leaflet-popup-tip {
+            background: var(--primary);
+        }
+
+        /* Feature Icons */
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 1.5rem;
+            transition: all 0.4s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: rotate(360deg) scale(1.1);
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.5);
+        }
+
+        /* Scroll Reveal */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s ease;
+        }
+
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Decorative Elements */
+        .section-divider {
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--secondary), transparent);
+            margin: 2rem auto;
+        }
+
+        /* Footer */
+        footer {
+            background: #0a0a0a;
+            border-top: 2px solid var(--secondary);
+        }
+
+        /* Mobile Menu */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: rgba(26, 26, 26, 0.98);
+            backdrop-filter: blur(20px);
+            z-index: 2000;
+            transition: right 0.4s ease;
+            padding: 2rem;
+        }
+
+        .mobile-menu.active {
+            right: 0;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            z-index: 2001;
+        }
+
+        .hamburger span {
+            width: 30px;
+            height: 3px;
+            background: var(--secondary);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(8px, -8px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 3000;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            max-width: 1200px;
+            width: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid var(--secondary);
+            animation: slideUp 0.4s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--accent);
+            border: 2px solid var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: var(--secondary);
+            color: var(--primary);
+            transform: rotate(90deg);
+        }
+
+        .modal-header {
+            position: relative;
+            height: 400px;
+            overflow: hidden;
+        }
+
+        .modal-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-header::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: linear-gradient(to top, #1a1a1a, transparent);
+            z-index: 1;
+        }
+
+        .modal-title {
+            position: absolute;
+            bottom: 30px;
+            left: 40px;
+            z-index: 2;
+        }
+
+        .modal-body {
+            padding: 40px;
+        }
+
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .spec-item {
+            background: rgba(212, 175, 55, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--secondary);
+            transition: all 0.3s ease;
+        }
+
+        .spec-item:hover {
+            background: rgba(212, 175, 55, 0.2);
+            transform: translateX(5px);
+        }
+
+        .spec-label {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .spec-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .features-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            display: flex;
+            align-items: center;
+        }
+
+        .features-list li::before {
+            content: '✓';
+            color: var(--secondary);
+            font-weight: bold;
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .color-swatch {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid var(--light);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+            border-color: var(--secondary);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+        }
+
+        .color-swatch.active {
+            border-color: var(--secondary);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+        }
+
+        .price-tag {
+            background: var(--secondary);
+            color: var(--primary);
+            padding: 20px 40px;
+            border-radius: 8px;
+            display: inline-block;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .desktop-nav {
+                display: none;
+            }
+
+            .modal-body {
+                padding: 20px;
+            }
+
+            .modal-title {
+                left: 20px;
+            }
+        }
+
+        /* Product Cards */
+        .product-card {
+            background: #2a2a2a;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            position: relative;
+        }
+
+        .product-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 25px 70px rgba(212, 175, 55, 0.3);
+            border-color: var(--secondary);
+        }
+
+        .product-image-container {
+            position: relative;
+            overflow: hidden;
+            height: 250px;
+        }
+
+        .product-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .product-card:hover .product-image-container img {
+            transform: scale(1.15) rotate(2deg);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--accent);
+            color: var(--light);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            z-index: 2;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .btn-shop {
+            background: transparent;
+            color: var(--secondary);
+            border: 2px solid var(--secondary);
+            padding: 8px 16px;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .btn-shop:hover {
+            background: var(--secondary);
+            color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        /* Shopping Cart Toast */
+        .cart-toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--secondary);
+            color: var(--primary);
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-family: 'Oswald', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.5);
+            z-index: 4000;
+            animation: slideInRight 0.5s ease, slideOutRight 0.5s ease 2.5s;
+            pointer-events: none;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center">
+                    <h1 class="text-3xl font-bold" style="color: var(--secondary);">
+                        <span style="color: var(--light);">R K WHEELS</span> ROYAL ENFIELD
+                    </h1>
+                </div>
+                
+                <div class="desktop-nav hidden md:flex space-x-8">
+                    <a href="#home" class="text-light hover:text-secondary transition-colors duration-300 font-semibold tracking-wider">HOME</a>
+                    <a href="#models" class="text-light hover:text-secondary transition-colors duration-300 font-semibold tracking-wider">MODELS</a>
+                    <a href="#shop" class="text-light hover:text-secondary transition-colors duration-300 font-semibold tracking-wider">SHOP</a>
+                    <a href="#about" class="text-light hover:text-secondary transition-colors duration-300 font-semibold tracking-wider">ABOUT</a>
+                    <a href="#services" class="text-light hover:text-secondary transition-colors duration-300 font-semibold tracking-wider">SERVICES</a>
+                    <a href="#contact" class="text-light hover:text-secondary transition-colors duration-300 font-semibold tracking-wider">CONTACT</a>
+                </div>
+
+                <div class="hamburger" onclick="toggleMobileMenu()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="flex flex-col space-y-6 mt-20">
+            <a href="#home" class="text-2xl text-light hover:text-secondary transition-colors" onclick="toggleMobileMenu()">HOME</a>
+            <a href="#models" class="text-2xl text-light hover:text-secondary transition-colors" onclick="toggleMobileMenu()">MODELS</a>
+            <a href="#shop" class="text-2xl text-light hover:text-secondary transition-colors" onclick="toggleMobileMenu()">SHOP</a>
+            <a href="#about" class="text-2xl text-light hover:text-secondary transition-colors" onclick="toggleMobileMenu()">ABOUT</a>
+            <a href="#services" class="text-2xl text-light hover:text-secondary transition-colors" onclick="toggleMobileMenu()">SERVICES</a>
+            <a href="#contact" class="text-2xl text-light hover:text-secondary transition-colors" onclick="toggleMobileMenu()">CONTACT</a>
+        </div>
+    </div>
+
+    <!-- Hero Slider -->
+    <section id="home" class="hero-slider">
+        <div class="slide active" style="background-image: url('https://cdni.autocarindia.com/ExtraImages/20240831060827_CL.jpg?w=728&q=75');">
+            <div class="slide-content">
+                <h1>PURE MOTORCYCLING</h1>
+                <p>Experience the legendary heritage of Royal Enfield. Built like a gun, goes like a bullet.</p>
+                <div class="flex gap-4">
+                    <a href="#models" class="btn-primary">EXPLORE MODELS</a>
+                    <a href="#contact" class="btn-secondary">BOOK TEST RIDE</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="slide" style="background-image: url('https://cdn.motor1.com/images/mgl/jpwyg/s1/royal-enfield-s-moto-himalaya.jpg');">
+            <div class="slide-content">
+                <h1>CLASSIC REDEFINED</h1>
+                <p>Timeless design meets modern engineering. Ride the legend.</p>
+                <div class="flex gap-4">
+                    <a href="#models" class="btn-primary">VIEW COLLECTION</a>
+                    <a href="#contact" class="btn-secondary">LOCATE DEALER</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="slide" style="background-image: url('https://assets.roadrunner.travel/img/2023/04/3-23-TEST-Royal-Enfield.jpg');">
+            <div class="slide-content">
+                <h1>ADVENTURE AWAITS</h1>
+                <p>Unleash your spirit of exploration with unmatched performance and reliability.</p>
+                <div class="flex gap-4">
+                    <a href="#models" class="btn-primary">DISCOVER MORE</a>
+                    <a href="#services" class="btn-secondary">LEARN MORE</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="slider-nav">
+            <div class="slider-dot active" onclick="goToSlide(0)"></div>
+            <div class="slider-dot" onclick="goToSlide(1)"></div>
+            <div class="slider-dot" onclick="goToSlide(2)"></div>
+        </div>
+    </section>
+
+    <!-- Models Section -->
+    <section id="models" class="py-24 bg-primary">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 scroll-reveal">
+                <h2 class="text-5xl md:text-6xl font-bold mb-4">OUR MODELS</h2>
+                <div class="section-divider"></div>
+                <p class="text-xl md:text-2xl text-secondary italic">Choose Your Legend</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bike-card scroll-reveal">
+                    <img src="https://media.zigcdn.com/media/model/2025/Sep/right-side-view-941104133_930x620.jpg
+                    ">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold mb-2">CLASSIC 350</h3>
+                        <p class="text-secondary mb-4">The icon that started it all</p>
+                        <p class="mb-4 text-gray-300">Timeless design, legendary reliability, pure Royal Enfield heritage in every ride.</p>
+                        <a href="#" class="btn-primary inline-block" onclick="openBikeModal('classic350'); return false;">VIEW DETAILS</a>
+                    </div>
+                </div>
+
+                <div class="bike-card scroll-reveal" style="animation-delay: 0.2s">
+                    <img src="https://images.timesdrive.in/photo/msid-151060174,thumbsize-353777/151060174.jpg
+                    ">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold mb-2">METEOR 350</h3>
+                        <p class="text-secondary mb-4">Cruising redefined</p>
+                        <p class="mb-4 text-gray-300">Easy, relaxed cruising with modern comfort and classic Royal Enfield soul.</p>
+                        <a href="#" class="btn-primary inline-block" onclick="openBikeModal('meteor350'); return false;">VIEW DETAILS</a>
+                    </div>
+                </div>
+
+                <div class="bike-card scroll-reveal" style="animation-delay: 0.4s">
+                    <img src="https://assets.gqindia.com/photos/5cdc2c27b6f0b3733ac71cb7/16:9/w_1920,c_limit/GQ-India-Royal-Enfield-Himalayan-4.jpg">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold mb-2">HIMALAYAN</h3>
+                        <p class="text-secondary mb-4">Adventure unleashed</p>
+                        <p class="mb-4 text-gray-300">Purpose-built for exploration, designed to conquer any terrain with confidence.</p>
+                        <a href="#" class="btn-primary inline-block" onclick="openBikeModal('himalayan'); return false;">VIEW DETAILS</a>
+                    </div>
+                </div>
+
+                <div class="bike-card scroll-reveal" style="animation-delay: 0.6s">
+                    <img src="https://cdn-s3.autocarindia.com/RoyalEnfield/Continental-GT-650/_AAB9339.JPG?w=728&q=75
+
+                    ">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold mb-2">CONTINENTAL GT 650</h3>
+                        <p class="text-secondary mb-4">Cafe racer perfection</p>
+                        <p class="mb-4 text-gray-300">Pure performance, classic cafe racer styling, twin-cylinder power.</p>
+                        <a href="#" class="btn-primary inline-block" onclick="openBikeModal('continentalgt650'); return false;">VIEW DETAILS</a>
+                    </div>
+                </div>
+
+                <div class="bike-card scroll-reveal" style="animation-delay: 0.8s">
+                    <img src="https://images.unsplash.com/photo-1726948655162-90a9d31601b1?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aW50ZXJjZXB0b3IlMjA2NTB8ZW58MHx8MHx8fDA%3D">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold mb-2">INTERCEPTOR 650</h3>
+                        <p class="text-secondary mb-4">Twin power unleashed</p>
+                        <p class="mb-4 text-gray-300">Retro-modern styling with smooth twin-cylinder performance for pure riding joy.</p>
+                        <a href="#" class="btn-primary inline-block" onclick="openBikeModal('interceptor650'); return false;">VIEW DETAILS</a>
+                    </div>
+                </div>
+
+                <div class="bike-card scroll-reveal" style="animation-delay: 1s">
+                    <img src="https://images.financialexpressdigital.com/2022/11/Royal-Enfield-Super-Meteor-650-3.jpg
+                    ">
+                    <div class="p-6">
+                        <h3 class="text-2xl font-bold mb-2">SUPER METEOR 650</h3>
+                        <p class="text-secondary mb-4">Cruiser excellence</p>
+                        <p class="mb-4 text-gray-300">Premium cruising with effortless power and commanding presence.</p>
+                        <a href="#" class="btn-primary inline-block" onclick="openBikeModal('supermeteor650'); return false;">VIEW DETAILS</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Shopping/Merchandise Section -->
+    <section id="shop" class="py-24 bg-gradient-to-b from-primary to-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 scroll-reveal">
+                <h2 class="text-5xl md:text-6xl font-bold mb-4">GEAR & MERCHANDISE</h2>
+                <div class="section-divider"></div>
+                <p class="text-xl md:text-2xl text-secondary italic">Ride in Style, Live the Legacy</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- Product Card 1 -->
+                <div class="product-card scroll-reveal">
+                    <div class="product-image-container">
+                        <img src="https://m.media-amazon.com/images/I/71PT1Y+ViYL._SL1500_.jpg" alt="Royal Enfield Helmet">
+                        <div class="product-badge">NEW</div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">CLASSIC HELMET</h3>
+                        <p class="text-secondary mb-3">Premium Safety Gear</p>
+                        <p class="text-gray-300 mb-4 text-sm">DOT certified full-face helmet with classic Royal Enfield styling and superior protection.</p>
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-2xl font-bold text-secondary">₹4,999</span>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 2 -->
+                <div class="product-card scroll-reveal" style="animation-delay: 0.1s">
+                    <div class="product-image-container">
+                        <img src="https://bikesterglobal.com/cdn/shop/files/1_6ef29326-4f29-4ffd-a298-3f98e6c0821d.png?v=1753261841&width=600" alt="Riding Jacket">
+                        <div class="product-badge">SALE</div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">RIDING JACKET</h3>
+                        <p class="text-secondary mb-3">All-Weather Protection</p>
+                        <p class="text-gray-300 mb-4 text-sm">Premium leather jacket with CE-approved armor and weatherproof membrane.</p>
+                        <div class="flex justify-between items-center gap-2">
+                            <div>
+                                <span class="text-lg text-gray-400 line-through">₹12,999</span>
+                                <span class="text-2xl font-bold text-secondary ml-2">₹9,999</span>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 3 -->
+                <div class="product-card scroll-reveal" style="animation-delay: 0.2s">
+                    <div class="product-image-container">
+                        <img src="https://m.media-amazon.com/images/I/71Eb60PUbML._SL1500_.jpg" alt="Riding Gloves">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">RIDING GLOVES</h3>
+                        <p class="text-secondary mb-3">Premium Grip & Comfort</p>
+                        <p class="text-gray-300 mb-4 text-sm">Genuine leather gloves with knuckle protection and touchscreen compatibility.</p>
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-2xl font-bold text-secondary">₹2,499</span>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 4 -->
+                <div class="product-card scroll-reveal" style="animation-delay: 0.3s">
+                    <div class="product-image-container">
+                        <img src="https://www.wildsta.com/cdn/shop/files/RoyalEnfieldCombo-WildstaIndia1_720x720.jpg?v=1744430749" alt="RE T-Shirt">
+                        <div class="product-badge">BESTSELLER</div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">CLASSIC T-SHIRT</h3>
+                        <p class="text-secondary mb-3">100% Premium Cotton</p>
+                        <p class="text-gray-300 mb-4 text-sm">Iconic Royal Enfield logo on premium cotton fabric. Available in multiple colors.</p>
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-2xl font-bold text-secondary">₹899</span>
+                           
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 5 -->
+                <div class="product-card scroll-reveal" style="animation-delay: 0.4s">
+                    <div class="product-image-container">
+                        <img src="http://financialexpress.com/wp-content/uploads/2021/09/royal-enfield-riding-boots.jpg" alt="Riding Boots">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">RIDING BOOTS</h3>
+                        <p class="text-secondary mb-3">Rugged & Comfortable</p>
+                        <p class="text-gray-300 mb-4 text-sm">Waterproof leather boots with reinforced toe and heel protection.</p>
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-2xl font-bold text-secondary">₹6,999</span>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 6 -->
+                <div class="product-card scroll-reveal" style="animation-delay: 0.5s">
+                    <div class="product-image-container">
+                        <img src="https://static1.industrybuying.com/products/automotive-maintenance-and-accessories/2-wheeler-accessories/bike-accessories/AUT.BIK.109257605_1687419778871.webp" alt="Saddle Bag">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">SADDLE BAG</h3>
+                        <p class="text-secondary mb-3">Premium Leather</p>
+                        <p class="text-gray-300 mb-4 text-sm">Handcrafted leather saddle bag with weather-resistant coating.</p>
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-2xl font-bold text-secondary">₹8,499</span>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 7 -->
+                <div class="product-card scroll-reveal" style="animation-delay: 0.6s">
+                    <div class="product-image-container">
+                        <img src="https://p2.piqsels.com/preview/665/645/106/royal-enfield-bullet-bike-motorcycle.jpg" alt="Sunglasses">
+                        <div class="product-badge">NEW</div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">AVIATOR SUNGLASSES</h3>
+                        <p class="text-secondary mb-3">UV Protection</p>
+                        <p class="text-gray-300 mb-4 text-sm">Classic aviator style with polarized lenses and UV400 protection.</p>
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-2xl font-bold text-secondary">₹1,999</span>
+                           
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Card 8 -->
+                <div class="product-card scroll-reveal" style="animation-delay: 0.7s">
+                    <div class="product-image-container">
+                        <img src="https://cafetwin.com/cdn/shop/files/portachiavi-royal-enfield-wing-logo-nero-6717804.jpg?crop=center&height=1008&v=1758366557&width=840" alt="Key Chain">
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">RE KEYCHAIN</h3>
+                        <p class="text-secondary mb-3">Premium Metal</p>
+                        <p class="text-gray-300 mb-4 text-sm">Solid brass keychain with Royal Enfield emblem. Perfect gift for riders.</p>
+                        <div class="flex justify-between items-center gap-2">
+                            <span class="text-2xl font-bold text-secondary">₹499</span>
+                           
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-12">
+                <a href="https://store.royalenfield.com/en/?srsltid=AfmBOop4UPh2haNgkg3l8-x5MykgUWTvOYlqHoN4mO6vlRJn_2UPMRYc/" target="_blank" class="btn-primary inline-block">VISIT ONLINE STORE</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Parallax Section -->
+    <section class="parallax py-32" style="background-image: url('https://images.unsplash.com/photo-1609630875252-9d2c5ea02838?w=1920&q=80');">
+        <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
+            <h2 class="text-5xl md:text-7xl font-bold mb-6 fade-in-up">RIDE WITH LEGACY</h2>
+            <p class="text-2xl md:text-3xl italic text-secondary mb-8 fade-in-up" style="animation-delay: 0.2s">Since 1901, crafting motorcycles with soul</p>
+            <a href="#about" class="btn-primary fade-in-up" style="animation-delay: 0.4s">OUR STORY</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="services" class="py-24 bg-gradient-to-b from-primary to-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 scroll-reveal">
+                <h2 class="text-5xl md:text-6xl font-bold mb-4">WHY CHOOSE US</h2>
+                <div class="section-divider"></div>
+                <p class="text-xl md:text-2xl text-secondary italic">Excellence in Every Detail</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <div class="feature-card text-center scroll-reveal">
+                    <div class="feature-icon">🏍️</div>
+                    <h3 class="text-2xl font-bold mb-3">AUTHENTIC MODELS</h3>
+                    <p class="text-gray-300">Genuine Royal Enfield motorcycles with complete documentation and warranty.</p>
+                </div>
+
+                <div class="feature-card text-center scroll-reveal" style="animation-delay: 0.2s">
+                    <div class="feature-icon">🔧</div>
+                    <h3 class="text-2xl font-bold mb-3">EXPERT SERVICE</h3>
+                    <p class="text-gray-300">Certified mechanics and state-of-the-art service facility for perfect maintenance.</p>
+                </div>
+
+                <div class="feature-card text-center scroll-reveal" style="animation-delay: 0.4s">
+                    <div class="feature-icon">💎</div>
+                    <h3 class="text-2xl font-bold mb-3">PREMIUM PARTS</h3>
+                    <p class="text-gray-300">Original spare parts and accessories to keep your ride in pristine condition.</p>
+                </div>
+
+                <div class="feature-card text-center scroll-reveal" style="animation-delay: 0.6s">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="text-2xl font-bold mb-3">TEST RIDES</h3>
+                    <p class="text-gray-300">Experience the legend first-hand with complimentary test rides on all models.</p>
+                </div>
+
+                <div class="feature-card text-center scroll-reveal" style="animation-delay: 0.8s">
+                    <div class="feature-icon">💰</div>
+                    <h3 class="text-2xl font-bold mb-3">FLEXIBLE FINANCING</h3>
+                    <p class="text-gray-300">Easy EMI options and exchange offers to make your dream bike affordable.</p>
+                </div>
+
+                <div class="feature-card text-center scroll-reveal" style="animation-delay: 1s">
+                    <div class="feature-icon">🏆</div>
+                    <h3 class="text-2xl font-bold mb-3">TRUSTED DEALER</h3>
+                    <p class="text-gray-300">Award-winning dealership with years of excellence in customer satisfaction.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 bg-primary">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div class="scroll-reveal">
+                    <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&q=80" alt="About Us" class="rounded-lg shadow-2xl border-4 border-secondary">
+                </div>
+                <div class="scroll-reveal">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6">R K WHEELS ROYAL ENFIELD</h2>
+                    <div class="section-divider mx-0"></div>
+                    <p class="text-xl md:text-2xl text-secondary italic mb-6">Your trusted partner in motorcycling excellence</p>
+                    <p class="text-lg text-gray-300 mb-4 leading-relaxed">
+                        At R K WHEELS Royal Enfield, we don't just sell motorcycles – we deliver dreams. As an authorized Royal Enfield dealership, we pride ourselves on offering the complete Royal Enfield experience, from expert guidance in choosing your perfect ride to comprehensive after-sales service.
+                    </p>
+                    <p class="text-lg text-gray-300 mb-6 leading-relaxed">
+                        Our team of passionate motorcycling enthusiasts is dedicated to ensuring every customer finds their perfect match among Royal Enfield's legendary lineup. With state-of-the-art facilities, certified technicians, and a genuine love for the brand, we're here to support your journey on two wheels.
+                    </p>
+                    <a href="#contact" class="btn-primary">GET IN TOUCH</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Location & Map Section -->
+    <section id="contact" class="py-24 bg-gradient-to-b from-gray-900 to-primary">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 scroll-reveal">
+                <h2 class="text-5xl md:text-6xl font-bold mb-4">VISIT US</h2>
+                <div class="section-divider"></div>
+                <p class="text-xl md:text-2xl text-secondary italic">Find Your Way to Excellence</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+                <div class="scroll-reveal">
+                    <div class="bg-gray-800 p-8 rounded-lg border-2 border-secondary">
+                        <h3 class="text-3xl font-bold mb-6">CONTACT INFORMATION</h3>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-start">
+                                <div class="text-secondary text-2xl mr-4">📍</div>
+                                <div>
+                                    <h4 class="font-bold text-xl mb-2">NETAJI PALLY, NH-512, RANGAVITA NEAR SBI GAZOLE TOWN, 732124, WEST BENGAL</h4>
+                                    <p class="text-gray-300">R K WHEELS Royal Enfield Showroom<br>
+                                    R K WHEELS, GAZOLE<br>
+                                    West Bengal - 732124</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="text-secondary text-2xl mr-4">📞</div>
+                                <div>
+                                    <h4 class="font-bold text-xl mb-2">PHONE</h4>
+                                    <p class="text-gray-300">Sales: +91-85149323778<br>
+                                    Service: +91-9832944895</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="text-secondary text-2xl mr-4">📧</div>
+                                <div>
+                                    <h4 class="font-bold text-xl mb-2">EMAIL</h4>
+                                        <P class=mails text-2xl mr-4>rkwheels62@gmail.com</P>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start">
+                                <div class="text-secondary text-2xl mr-4">⏰</div>
+                                <div>
+                                    <h4 class="font-bold text-xl mb-2">WORKING HOURS</h4>
+                                    <p class="text-gray-300">Monday - Saturday: 9:00 AM - 8:00 PM<br>
+                                    Sunday: 10:00 AM - 6:00 PM</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8">
+                            <a href="https://docs.google.com/forms/d/e/1FAIpQLSf5GFGDjBSA08Fhb-jw5Tom3dd-zH6us-GsNp1IJ0vv4D-N2Q/viewform?usp=publish-editor" class="btn-primary block text-center">BOOK TEST RIDE</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="scroll-reveal">
+                    <div id="map" class="rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4" style="color: var(--secondary);">R K WHEELS</h3>
+                    <p class="text-gray-400">Your trusted Royal Enfield partner for authentic motorcycling experiences.</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-xl font-bold mb-4">QUICK LINKS</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-secondary transition-colors">Home</a></li>
+                        <li><a href="#models" class="text-gray-400 hover:text-secondary transition-colors">Models</a></li>
+                        <li><a href="#about" class="text-gray-400 hover:text-secondary transition-colors">About</a></li>
+                        <li><a href="#services" class="text-gray-400 hover:text-secondary transition-colors">Services</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-xl font-bold mb-4">SERVICES</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-secondary transition-colors">Test Rides</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-secondary transition-colors">Service & Maintenance</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-secondary transition-colors">Spare Parts</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-secondary transition-colors">Accessories</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-xl font-bold mb-4">CONNECT</h4>
+                    <div class="flex space-x-4">
+                        <a href="https://www.facebook.com/share/1Aeg6UmVEr/?mibextid=wwXIfr" class="text-gray-400 hover:text-secondary transition-colors text-2xl">📘</a>
+                        <a href="" class="text-gray-400 hover:text-secondary transition-colors text-2xl">📷</a>
+                        <a href="#" class="text-gray-400 hover:text-secondary transition-colors text-2xl">🐦</a>
+                        <a href="#" class="text-gray-400 hover:text-secondary transition-colors text-2xl">▶️</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-8 text-center">
+                <p class="text-gray-400">&copy; 2026 R K WHEELS Royal Enfield. All rights reserved. | Built like a gun, goes like a bullet.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bike Details Modal -->
+    <div id="bikeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-close" onclick="closeBikeModal()">×</div>
+            <div class="modal-header">
+                <img id="modalImage" src="" alt="Bike">
+                <div class="modal-title">
+                    <h2 id="modalTitle" class="text-5xl font-bold mb-2"></h2>
+                    <p id="modalSubtitle" class="text-2xl text-secondary italic"></p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="price-tag" id="modalPrice"></div>
+                
+                <h3 class="text-3xl font-bold mb-4 mt-6">TECHNICAL SPECIFICATIONS</h3>
+                <div class="specs-grid" id="specsGrid"></div>
+
+                <h3 class="text-3xl font-bold mb-4 mt-8">AVAILABLE COLORS</h3>
+                <div class="color-options" id="colorOptions"></div>
+
+                <h3 class="text-3xl font-bold mb-4 mt-8">KEY FEATURES</h3>
+                <ul class="features-list" id="featuresList"></ul>
+
+                <div id="modalDescription" class="mt-8 text-lg text-gray-300 leading-relaxed"></div>
+
+                <div class="flex gap-4 mt-8 flex-wrap">
+                    <a href="#contact" class="btn-primary" onclick="closeBikeModal()">BOOK TEST RIDE</a>
+                    <a href="#contact" class="btn-secondary" onclick="closeBikeModal()">ENQUIRE NOW</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Bike Data
+        const bikeData = {
+            classic350: {
+                name: "CLASSIC 350",
+                subtitle: "The icon that started it all",
+                price: "₹2,12,969",
+                image: "https://media.zigcdn.com/media/model/2025/Sep/right-side-view-941104133_930x620.jpg",
+                description: "The Royal Enfield Classic 350 is a timeless motorcycle that embodies the essence of motorcycling heritage. With its distinctive retro styling, robust single-cylinder engine, and unmistakable thump, the Classic 350 continues to be one of the most loved motorcycles globally. Perfect for both city commutes and weekend getaways.",
+                specs: [
+                    { label: "Engine", value: "349cc Single Cylinder" },
+                    { label: "Power", value: "20.21ps @ 6100 rpm" },
+                    { label: "Torque", value: "27 Nm @ 4000 rpm" },
+                    { label: "Transmission", value: "5-Speed Manual" },
+                    { label: "Fuel Tank", value: "13 Liters" },
+                    { label: "Seat Height", value: "805 mm" },
+                    { label: "Weight", value: "196 kg" },
+                    { label: "Mileage", value: "35-41.55 km/l" }
+                ],
+                colors: [
+                    { name: "Signals Black", code: "#1a1a1a" },
+                    { name: "Gunmetal Grey", code: "#4a4a4a" },
+                    { name: "Marsh Grey", code: "#6b7280" },
+                    { name: "Stealth Black", code: "#0f0f0f" }
+                ],
+                features: [
+                    "Classic teardrop fuel tank design",
+                    "Tripper Navigation system (optional)",
+                    "Dual-channel ABS for enhanced safety",
+                    "LED tail lamp with classic headlamp",
+                    "Chrome finished exhaust",
+                    "Spoke wheels with tubeless tyres",
+                    "Comfortable upright riding position",
+                    "Low maintenance costs"
+                ]
+            },
+            meteor350: {
+                name: "METEOR 350",
+                subtitle: "Cruising redefined",
+                price: "₹2,27,499",
+                image: "https://images.timesdrive.in/photo/msid-151060174,thumbsize-353777/151060174.jpg",
+                description: "The Royal Enfield Meteor 350 is built for easy, relaxed cruising. Featuring the all-new J-platform and a thoroughly modern engine, it offers exceptional refinement while maintaining the classic Royal Enfield character. With its comfortable ergonomics and smooth power delivery, the Meteor 350 is perfect for both daily commutes and long highway cruises.",
+                specs: [
+                    { label: "Engine", value: "349cc Single Cylinder" },
+                    { label: "Power", value: "20.21ps  @ 6100 rpm" },
+                    { label: "Torque", value: "27 Nm @ 4000 rpm" },
+                    { label: "Transmission", value: "5-Speed Manual" },
+                    { label: "Fuel Tank", value: "15 Liters" },
+                    { label: "Seat Height", value: "765 mm" },
+                    { label: "Weight", value: "191 kg" },
+                    { label: "Mileage", value: "36-42 km/l" }
+                ],
+                colors: [
+                    { name: "Fireball Red", code: "#c41e3a" },
+                    { name: "Stellar Blue", code: "#1e3a8a" },
+                    { name: "Stellar Black", code: "#0a0a0a" },
+                    { name: "Supernova Brown", code: "#8b4513" }
+                ],
+                features: [
+                    "Tripper Navigation system as standard",
+                    "All-LED lighting with DRLs",
+                    "Dual-channel ABS",
+                    "Low seat height for easy handling",
+                    "Split seats for comfort",
+                    "Twin-pod instrument cluster",
+                    "USB charging port",
+                    "Tubeless tyres on alloy wheels"
+                ]
+            },
+            himalayan: {
+                name: "HIMALAYAN",
+                subtitle: "Adventure unleashed",
+                price: "₹3,05,736",
+                image: "https://assets.gqindia.com/photos/5cdc2c27b6f0b3733ac71cb7/16:9/w_1920,c_limit/GQ-India-Royal-Enfield-Himalayan-4.jpg",
+                description: "The Royal Enfield Himalayan is purpose-built for adventure touring. With its go-anywhere capability, long-travel suspension, and rugged build quality, it's designed to handle everything from city streets to mountain trails. The Himalayan embodies the spirit of exploration and is the perfect companion for riders who seek adventure beyond the ordinary.",
+                specs: [
+                    { label: "Engine", value: "452cc Single Cylinder" },
+                    { label: "Power", value: "40.02 ps @ 6500 rpm" },
+                    { label: "Torque", value: "40 Nm @ 4000-4500 rpm" },
+                    { label: "Transmission", value: "5-Speed Manual" },
+                    { label: "Fuel Tank", value: "17 Liters" },
+                    { label: "Seat Height", value: "800 mm" },
+                    { label: "Weight", value: "199 kg" },
+                    { label: "Ground Clearance", value: "220 mm" }
+                ],
+                colors: [
+                    { name: "Rock Red", code: "#8b0000" },
+                    { name: "Granite Black", code: "#2b2b2b" },
+                    { name: "Lake Blue", code: "#4682b4" },
+                    { name: "Gravel Grey", code: "#808080" }
+                ],
+                features: [
+                    "Long-travel suspension (200mm front, 180mm rear)",
+                    "Dedicated adventure ergonomics",
+                    "Compass and hazard lights",
+                    "Dual-purpose tyres",
+                    "Front rack and rear luggage carrier",
+                    "High ground clearance",
+                    "Wind deflector",
+                    "Dual-channel ABS with rear wheel off-road mode"
+                ]
+            },
+            continentalgt650: {
+                name: "CONTINENTAL GT 650",
+                subtitle: "Cafe racer perfection",
+                price: "₹3,53,105",
+                image: "https://cdn-s3.autocarindia.com/RoyalEnfield/Continental-GT-650/_AAB9339.JPG?w=728&q=75",
+                description: "The Continental GT 650 is a modern interpretation of the classic cafe racer. With its aggressive riding position, clip-on handlebars, and powerful 650cc twin-cylinder engine, it delivers pure performance wrapped in stunning retro styling. Built for spirited rides and weekend blasts, the Continental GT 650 is a purist's dream.",
+                specs: [
+                    { label: "Engine", value: "647.95cc Parallel Twin" },
+                    { label: "Power", value: "47.4 bhp @ 7150 rpm" },
+                    { label: "Torque", value: "52.3 Nm @ 5150 rpm" },
+                    { label: "Transmission", value: "6-Speed Manual" },
+                    { label: "Fuel Tank", value: "12.5 Liters" },
+                    { label: "Seat Height", value: "790 mm" },
+                    { label: "Weight", value: "198 kg" },
+                    { label: "Top Speed", value: "160+ km/h" }
+                ],
+                colors: [
+                    { name: "Rocker Red", code: "#dc143c" },
+                    { name: "Ventura Blue", code: "#4169e1" },
+                    { name: "Mr Clean", code: "#c0c0c0" },
+                    { name: "British Racing Green", code: "#004d00" }
+                ],
+                features: [
+                    "648cc air-oil cooled parallel twin engine",
+                    "Clip-on handlebars for sporty posture",
+                    "Twin-pod analogue-digital instrument cluster",
+                    "Dual-channel ABS",
+                    "Pirelli tyres",
+                    "Cafe racer styling with rear cowl",
+                    "Chrome finished exhausts",
+                    "Excellent power-to-weight ratio"
+                ]
+            },
+            interceptor650: {
+                name: "INTERCEPTOR 650",
+                subtitle: "Twin power unleashed",
+                price: "₹3,17,728",
+                image: "https://images.unsplash.com/photo-1726948655162-90a9d31601b1?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aW50ZXJjZXB0b3IlMjA2NTB8ZW58MHx8MHx8fDA%3D",
+                description: "The Royal Enfield Interceptor 650 combines classic British styling with modern reliability. With its upright ergonomics, smooth parallel-twin engine, and versatile character, it's equally at home in the city or on the highway. The Interceptor 650 offers pure motorcycling joy with its effortless power delivery and timeless appeal.",
+                specs: [
+                    { label: "Engine", value: "647.95cc Parallel Twin" },
+                    { label: "Power", value: "47.4 bhp @ 7150 rpm" },
+                    { label: "Torque", value: "52.3 Nm @ 5150 rpm" },
+                    { label: "Transmission", value: "6-Speed Manual" },
+                    { label: "Fuel Tank", value: "13.7 Liters" },
+                    { label: "Seat Height", value: "803 mm" },
+                    { label: "Weight", value: "202 kg" },
+                    { label: "Mileage", value: "23-25 km/l" }
+                ],
+                colors: [
+                    { name: "Orange Crush", code: "#ff8c00" },
+                    { name: "Baker Express", code: "#8b4513" },
+                    { name: "Downtown Drag", code: "#2f4f4f" },
+                    { name: "Ravishing Red", code: "#b22222" }
+                ],
+                features: [
+                    "Classic British parallel twin engine",
+                    "Comfortable upright riding position",
+                    "Twin-pod instrument cluster",
+                    "Dual-channel ABS",
+                    "Pirelli tyres",
+                    "Chrome finished twin exhausts",
+                    "Classic teardrop fuel tank",
+                    "Smooth, refined power delivery"
+                ]
+            },
+            supermeteor650: {
+                name: "SUPER METEOR 650",
+                subtitle: "Cruiser excellence",
+                price: "₹4,02,965",
+                image: "https://images.financialexpressdigital.com/2022/11/Royal-Enfield-Super-Meteor-650-3.jpg",
+                description: "The Super Meteor 650 is Royal Enfield's flagship cruiser, offering premium comfort and effortless touring capability. With its relaxed ergonomics, long wheelbase, and powerful 650cc twin engine, it's designed for mile-munching comfort. The Super Meteor 650 combines classic cruiser styling with modern technology for the ultimate touring experience.",
+                specs: [
+                    { label: "Engine", value: "648cc Parallel Twin" },
+                    { label: "Power", value: "47 bhp @ 7150 rpm" },
+                    { label: "Torque", value: "52.3 Nm @ 5150 rpm" },
+                    { label: "Transmission", value: "6-Speed Manual" },
+                    { label: "Fuel Tank", value: "15.7 Liters" },
+                    { label: "Seat Height", value: "740 mm" },
+                    { label: "Weight", value: "241 kg" },
+                    { label: "Wheelbase", value: "1500 mm" }
+                    
+                ],
+                colors: [
+                    { name: "Astral Black", code: "#0a0a0a" },
+                    { name: "Astral Blue", code: "#1e3a8a" },
+                    { name: "Celestial Red", code: "#8b0000" },
+                    { name: "Interstellar Grey", code: "#4a5568" }
+                ],
+                features: [
+                    "Tripper Dash navigation system",
+                    "Upside-down front forks",
+                    "Dual-channel ABS with rear lift-off protection",
+                    "Low seat height for easy handling",
+                    "Premium cushioned seats",
+                    "LED lighting all around",
+                    "Tubeless tyres on alloy wheels",
+                    "Extensive touring accessories available"
+                ]
+            }
+        };
+
+        // Modal Functions
+        function openBikeModal(bikeId) {
+            const bike = bikeData[bikeId];
+            if (!bike) return;
+
+            // Set basic info
+            document.getElementById('modalTitle').textContent = bike.name;
+            document.getElementById('modalSubtitle').textContent = bike.subtitle;
+            document.getElementById('modalPrice').textContent = bike.price;
+            document.getElementById('modalImage').src = bike.image;
+            document.getElementById('modalDescription').textContent = bike.description;
+
+            // Set specs
+            const specsGrid = document.getElementById('specsGrid');
+            specsGrid.innerHTML = bike.specs.map(spec => `
+                <div class="spec-item">
+                    <div class="spec-label">${spec.label}</div>
+                    <div class="spec-value">${spec.value}</div>
+                </div>
+            `).join('');
+
+            // Set colors
+            const colorOptions = document.getElementById('colorOptions');
+            colorOptions.innerHTML = bike.colors.map((color, index) => `
+                <div class="color-swatch ${index === 0 ? 'active' : ''}" 
+                     style="background: ${color.code}" 
+                     title="${color.name}"
+                     onclick="selectColor(this)"></div>
+            `).join('');
+
+            // Set features
+            const featuresList = document.getElementById('featuresList');
+            featuresList.innerHTML = bike.features.map(feature => `
+                <li>${feature}</li>
+            `).join('');
+
+            // Show modal
+            document.getElementById('bikeModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBikeModal() {
+            document.getElementById('bikeModal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function selectColor(element) {
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('bikeModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeBikeModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeBikeModal();
+            }
+        });
+
+        // Navbar Scroll Effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 100) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Hero Slider
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.slider-dot');
+        const totalSlides = slides.length;
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            slides[index].classList.add('active');
+            dots[index].classList.add('active');
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            showSlide(currentSlide);
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            showSlide(currentSlide);
+        }
+
+        // Auto-advance slider
+        setInterval(nextSlide, 5000);
+
+        // Scroll Reveal Animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.scroll-reveal').forEach(element => {
+            observer.observe(element);
+        });
+
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const hamburger = document.querySelector('.hamburger');
+            mobileMenu.classList.toggle('active');
+            hamburger.classList.toggle('active');
+        }
+
+        // Smooth Scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Initialize Map with Leaflet - EXACT LOCATION FROM GOOGLE MAPS
+        document.addEventListener('DOMContentLoaded', function() {
+            // Exact coordinates from https://maps.app.goo.gl/4Kn7GbRNowxQoLCQ8
+            const lat = 22.9839611;
+            const lng = 88.4283806;
+            const map = L.map('map').setView([lat, lng], 17);
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            // Custom marker icon
+            const customIcon = L.divIcon({
+                html: '<div style="background: #d4af37; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 3px solid #1a1a1a; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);">🏍️</div>',
+                iconSize: [40, 40],
+                className: 'custom-marker'
+            });
+
+            // Add marker at exact location
+            const marker = L.marker([lat, lng], {icon: customIcon}).addTo(map);
+
+            // Add popup with Google Maps link
+            marker.bindPopup(`
+                <div style="font-family: 'Oswald', sans-serif; text-align: center; padding: 10px;">
+                    <h3 style="margin: 0 0 10px 0; color: #d4af37; font-size: 18px;">R K WHEELS ROYAL ENFIELD</h3>
+                    <p style="margin: 0; font-size: 14px;">R K WHEELS, GAZOLE<br>West Bengal 741235</p>
+                    <a href="https://maps.app.goo.gl/4Kn7GbRNowxQoLCQ8" target="_blank" 
+                       style="display: inline-block; margin-top: 10px; padding: 8px 16px; background: #d4af37; color: #1a1a1a; text-decoration: none; font-weight: bold; border-radius: 4px;">
+                        GET DIRECTIONS
+                    </a>
+                </div>
+            `).openPopup();
+
+            // Add circle overlay around the location
+            L.circle([lat, lng], {
+                color: '#d4af37',
+                fillColor: '#d4af37',
+                fillOpacity: 0.1,
+                radius: 300
+            }).addTo(map);
+        });
+
+        // Add to Cart Function with Toast Notification
+        function addToCart(productName) {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = 'cart-toast';
+            toast.innerHTML = `✓ ${productName} added to cart!`;
+            document.body.appendChild(toast);
+
+            // Remove toast after animation completes
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+
+            // Log for demonstration (you can add actual cart logic here)
+            console.log(`Added to cart: ${productName}`);
+        }
+    </script>
